@@ -39,10 +39,13 @@ from __future__ import annotations
 
 from stdnum.eu.vat import MEMBER_STATES
 from stdnum.exceptions import *
-from stdnum.util import NumberValidationModule, clean, get_cc_module
+from stdnum.util import NumberValidationModule, clean, get_cc_module, get_soap_client
 
 
 _country_modules = dict()
+
+seed_wsdl = 'https://ec.europa.eu/taxation_customs/dds2/seed/services/excise/verification?wsdl'
+"""The WSDL URL of the System for Exchange of Excise Data (SEED)."""
 
 
 def _get_cc_module(cc: str) -> NumberValidationModule | None:
@@ -81,3 +84,16 @@ def is_valid(number: str) -> bool:
         return bool(validate(number))
     except ValidationError:
         return False
+
+
+def check_seed(
+        number: str,
+        timeout: float = 30,
+) -> dict[str, Any]:  # pragma: no cover (not part of normal test suite)
+    """Query the online European Commission System for Exchange of Excise Data
+    (SEED) for validity of the provided number. Note that the service has
+    usage limitations (see the VIES website for details). The timeout is in
+    seconds. This returns a dict-like object."""
+    number = compact(number)
+    client = get_soap_client(seed_wsdl, timeout)
+    return client.verifyExcise(number)  # type: ignore[no-any-return]

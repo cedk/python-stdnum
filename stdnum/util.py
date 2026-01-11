@@ -260,6 +260,10 @@ def get_cc_module(cc: str, name: str) -> NumberValidationModule | None:
 # this is a cache of SOAP clients
 _soap_clients = {}
 
+_soap_headers = {
+    'User-Agent': 'Mozilla/5.0 (python-stdnum)',
+    }
+
 
 def _get_zeep_soap_client(
     wsdlurl: str,
@@ -272,6 +276,7 @@ def _get_zeep_soap_client(
     session = Session()
     session.verify = verify
     transport = Transport(operation_timeout=timeout, timeout=timeout, session=session)  # type: ignore[no-untyped-call]
+    session.headers.update(_soap_headers)
     return CachingClient(wsdlurl, transport=transport).service  # type: ignore[no-untyped-call]
 
 
